@@ -1,7 +1,4 @@
 // Function to score a Spark Dataframe (more precisely an RDD[Row]) using an H2O POJO model.
-// To load POJO model first compile and package POJO into jar (say pojo_model.jar), then include jar as part of SPARK_SUBMIT_OPTIONS
-// e.g. export SPARK_SUBMIT_OPTIONS = "--jars /home/some.jar,/home/pojo_model.jar"
-// Now load POJO model by reflection 'val model = Class.forName("pojo_model").newInstance().asInstanceOf[GenModel]'
 
 import _root_.hex.genmodel.GenModel // Depends on H2O's Sparkling Water package
 import org.apache.spark.sql._
