@@ -1,5 +1,6 @@
 # H2O-Spark-Scoring
 Functions to score Spark data structures with H2O POJO models.
+See https://github.com/h2oai/h2o-3/blob/master/h2o-docs/src/product/howto/POJO_QuickStart.md
 
 Assume pojo model is "model.java" and model name is "model_name".
 
