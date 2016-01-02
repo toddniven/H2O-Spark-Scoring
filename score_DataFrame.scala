@@ -10,11 +10,9 @@ def scoreDFWithPojo(model : _root_.hex.genmodel.GenModel, df : org.apache.spark.
     // Create hash map to map the response column (if it exists) to Double
     val hashMap = scala.collection.mutable.HashMap.empty[String,Int]
     if(responseAttached){for (j <- 0 to domainValues(domainValues.length-1).length -1){hashMap+=domainValues(domainValues.length-1)(j)->j}}
-    // Specify the record length
-    val recordLength = domainValues.length - 2
-    // Convert record into a record of Doubles
+    // Convert each row into a row of Doubles
         val output = df.map( r => {
-        val rRecoded = for (i <- 0 to recordLength) yield
+        val rRecoded = for (i <- 0 to domainValues.length - 2) yield
             if (model.getDomainValues(i) != null && r(i) != null) model.mapEnum(model.getColIdx(model.getNames.apply(i)), r(i).toString).toDouble else 
             if (model.getDomainValues(i) != null && r(i) == null) -1.0 else
             if (r(i).isInstanceOf[Int]) r(i).asInstanceOf[Int].toDouble else
