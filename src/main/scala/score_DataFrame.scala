@@ -5,6 +5,8 @@
 import _root_.hex.genmodel.GenModel
 import org.apache.spark.sql._
 
+import scala.collection.immutable.IndexedSeq
+
 object score_DataFrame {
   /**
    * Score sql df with loaded pojo model.
@@ -24,18 +26,18 @@ object score_DataFrame {
     }
     // Convert each row into a row of Doubles
     val output = df.map(r => {
-      val rRecoded = for (i <- 0 to domainValues.length - 2) yield
+      val rRecoded: IndexedSeq[Double] = for (i <- 0 to domainValues.length - 2) yield
       if (model.getDomainValues(i) != null && r(i) != null) {
         model.mapEnum(model.getColIdx(model.getNames.apply(i)), r(i).toString).toDouble
       }
       else
       if (model.getDomainValues(i) != null && r(i) == null) -1.0
       else
-      if (r(i).isInstanceOf[Int]) r(i).asInstanceOf[Int].toDouble
-      else
-      if (r(i).isInstanceOf[Double]) r(i).asInstanceOf[Double]
-      else
-        0.0 /** default to 0 if null is found in numeric column */
+      r(i) match {
+        case i1: Int => i1.toDouble
+        case d: Double => d
+        case _ => 0.0
+      } /** default to 0 if null is found in numeric column */
 
       /** run model on encoded rows. If responseAttached = true output response as the last column as Double. */
       if (responseAttached) {
