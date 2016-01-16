@@ -1,16 +1,22 @@
 # H2O-Spark-Scoring
-Functions to score Spark data structures with H2O POJO models.
+Provide functions to score Spark data frames with H2O POJO models.
+H2O POJO models take numeric arrays as input and output the prediction. Here we simply provide
+ a mapping from a dataframe row to an array and then apply the POJO to the array.
 See https://github.com/h2oai/h2o-3/blob/master/h2o-docs/src/product/howto/POJO_QuickStart.md
 
 Assume pojo model is "model.java" and model name is "model_name".
 
 Step 1: Package pojo model into jar (requires h2o-genmodel.jar):
-`javac -cp h2o-genmodel.jar -J-Xmx2g -J-XX:MaxPermSize=256m model.java`
-`jar -cf model.jar *.class`
+`
+javac -cp h2o-genmodel.jar -J-Xmx2g -J-XX:MaxPermSize=256m model.java
+jar -cf model.jar *.class
+`
 
 Step 2: Include model.jar in Spark instance:
-`export SPARK_SUBMIT_OPTIONS="--driver-class-path .../sparkling-water-1.5.6/assembly/build/libs/sparkling-water-assembly-1.5.6-all.jar \`
-`--jars .../sparkling-water-1.5.6/assembly/build/libs/sparkling-water-assembly-1.5.6-all.jar,.../model.jar`
+`
+export SPARK_SUBMIT_OPTIONS="--driver-class-path .../sparkling-water-1.5.6/assembly/build/libs/sparkling-water-assembly-1.5.6-all.jar \
+--jars .../sparkling-water-1.5.6/assembly/build/libs/sparkling-water-assembly-1.5.6-all.jar,.../model.jar
+`
 
 Step 3: In Spark, load model by reflection:
 ```
