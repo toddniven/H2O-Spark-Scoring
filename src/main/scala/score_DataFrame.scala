@@ -4,7 +4,6 @@
 
 import _root_.hex.genmodel.GenModel
 import org.apache.spark.sql._
-
 import scala.collection.immutable.IndexedSeq
 
 object score_DataFrame {
@@ -36,8 +35,8 @@ object score_DataFrame {
       r(i) match {
         case i1: Int => i1.toDouble
         case d: Double => d
-        case _ => 0.0
-      } /** default to 0 if null is found in numeric column */
+        case _ => Double.NaN
+      }
 
       /** run model on encoded rows. If responseAttached = true output response as the last column as Double. */
       if (responseAttached) {
