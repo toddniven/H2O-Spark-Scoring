@@ -3,27 +3,47 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 import _root_.hex.genmodel.GenModel
+import org.apache.spark.SparkContext
 import org.apache.spark.sql._
 import scala.collection.immutable.IndexedSeq
 
 object ScoreDataFrame {
   /**
+   * Function to arrange dataframe columns in the order that the POJO model expects.
+   * Also, add and fills any missing columns with NULLs (currently uses sql).
+   * colsToKeep are appended. Used for target column and index column if needed.
+   */
+  def organiseDF(model: _root_.hex.genmodel.GenModel,
+                 inputDF : org.apache.spark.sql.DataFrame,
+                 colsToKeep : Array[String]) : org.apache.spark.sql.DataFrame = {
+    val sqlContext = SQLContext.getOrCreate(SparkContext.getOrCreate())
+    inputDF.registerTempTable("inputDF")
+    val missingCols = model.getNames.toList.diff(inputDF.columns.toList)
+    val appendCols = if (colsToKeep.length < 1) "" else {
+      ", "+colsToKeep.toList.toString.substring(5,colsToKeep.toList.toString.length-1)
+    }
+    val inputDF0 = if (missingCols == List()) inputDF else {
+      val missingColsQuery0 = for(i <- missingCols.indices) yield {
+        "NULL as "+missingCols(i)
+      }
+      val missingColsQuery = "select *, "+missingColsQuery0.toString.substring(7,missingColsQuery0.toString.length-1)+" from inputDF"
+      sqlContext.sql(missingColsQuery)
+    }
+    inputDF0.registerTempTable("inputDF0")
+    val modelColsString = model.getNames.toList.toString.substring(5,model.getNames.toList.toString.length-1)
+    sqlContext.sql("select "+modelColsString+appendCols+" from inputDF0")
+  }
+
+  /**
    * Score sql df with loaded pojo model.
-   * If responseAttached = true then response must be final column of df
-   * and of String type (at this stage only implemented for classification).
+   * (TODO: add schema and output DF)
    */
   def scoreDFWithPojo(model: _root_.hex.genmodel.GenModel,
-                      df: org.apache.spark.rdd.RDD[Row],
-                      responseAttached: Boolean): org.apache.spark.rdd.RDD[Array[Double]] = {
+                      df0: org.apache.spark.sql.DataFrame,
+                      colsToKeep: Array[String]): org.apache.spark.rdd.RDD[Row] = {
+    val df = organiseDF(model,df0,colsToKeep) /* First arrange dataframe for scoring */
     val domainValues = model.getDomainValues
-    /** Create hash map to map the response column (if it exists) to Double */
-    val hashMap = scala.collection.mutable.HashMap.empty[String, Int]
-    if (responseAttached) {
-      for (j <- 0 to domainValues(domainValues.length - 1).length - 1) {
-        hashMap += domainValues(domainValues.length - 1)(j) -> j
-      }
-    }
-    // Convert each row into a row of Doubles
+    /* Convert each feature of each row into a doubles */
     val output = df.map(r => {
       val rRecoded: IndexedSeq[Double] = for (i <- 0 to domainValues.length - 2) yield
       if (model.getDomainValues(i) != null && r(i) != null) {
@@ -32,18 +52,17 @@ object ScoreDataFrame {
       else
       if (model.getDomainValues(i) != null && r(i) == null) -1.0
       else
-      r(i) match {
-        case i1: Int => i1.toDouble
-        case d: Double => d
-        case _ => Double.NaN
-      }
-
-      /** run model on encoded rows. If responseAttached = true output response as the last column as Double. */
-      if (responseAttached) {
-        model.score0(rRecoded.toArray, new Array[Double](model.getNumResponseClasses + 1)) ++
-          Array(hashMap(r.getString(r.length - 1)).toDouble)
-      }
-      else model.score0(rRecoded.toArray, new Array[Double](model.getNumResponseClasses + 1))
+        r(i) match {
+          case i1: Int => i1.toDouble
+          case d: Double => d
+          case _ => Double.NaN
+        }
+      /* Columns to keep to be appended */
+      val appendSeq = if (colsToKeep.length < 1) Seq() else {
+          for (i <- colsToKeep.indices) yield r(domainValues.length - 1 + i)
+        }
+      Row.fromSeq(model.score0(rRecoded.toArray, new Array[Double](model.getNumResponseClasses + 1)).toSeq
+        ++ appendSeq)
     })
     output
   }
