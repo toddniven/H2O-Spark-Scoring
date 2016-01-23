@@ -6,7 +6,7 @@ import _root_.hex.genmodel.GenModel
 import org.apache.spark.sql._
 import scala.collection.immutable.IndexedSeq
 
-object score_DataFrame {
+object ScoreDataFrame {
   /**
    * Score sql df with loaded pojo model.
    * If responseAttached = true then response must be final column of df
