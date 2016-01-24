@@ -1,5 +1,5 @@
 # H2O-Spark-Scoring
-H2O macine learning models can be exported as POJO.
+H2O machine learning models can be exported as POJO.
 See https://github.com/h2oai/h2o-3/blob/master/h2o-docs/src/product/howto/POJO_QuickStart.md
 Here we provide functions to score Spark data frames with H2O POJO models.
 H2O POJO models take numeric arrays as input and output the prediction. Here we simply provide
@@ -29,3 +29,4 @@ val keepCols = Array("indexCol","targetCol")
 val scoredDataFrame = organiseScoreOutput(model, df, keepCols)
 scoredDataFrame.show
 ```
+So far only tested on GBM classification models. 
