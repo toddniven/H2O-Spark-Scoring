@@ -22,3 +22,10 @@ Step 3: In Spark, load model by reflection:
 import _root_.hex.genmodel.GenModel
 val model = Class.forName("model").newInstance().asInstanceOf[GenModel]
 ```
+
+Step 4: Example usage:
+```scala
+val keepCols = Array("indexCol","targetCol")
+val scoredDataFrame = organiseScoreOutput(model, df, keepCols)
+scoredDataFrame.show
+```
