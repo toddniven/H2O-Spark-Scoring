@@ -26,7 +26,7 @@ val model = Class.forName("model").newInstance().asInstanceOf[GenModel]
 Step 4: Example usage:
 ```scala
 val keepCols = Array("indexCol","targetCol")
-val scoredDataFrame = organiseScoreOutput(model, df, keepCols)
+val scoredDataFrame = ScoreDataFrame.organiseScoreOutput(model, df, keepCols)
 scoredDataFrame.show
 ```
 So far only tested on GBM classification models. 
