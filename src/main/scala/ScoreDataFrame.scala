@@ -10,7 +10,6 @@ import scala.collection.immutable.IndexedSeq
 import org.apache.spark.sql.types._
 
 object ScoreDataFrame {
-  @transient  var sqlContext: SQLContext = _
   /**
    * Function to arrange dataframe columns in the order that the POJO model expects.
    * Also, add and fills any missing columns with NULLs (currently uses sql).
@@ -18,11 +17,13 @@ object ScoreDataFrame {
    * @param model a POJO model (compiled using GenModel)
    * @param inputDF an sql DataFrame to be scored
    * @param colsToKeep an array of column names from df to be kept in the output (eg key, target columns)
+   * @param sqlContext requires the sqlContext to be specified
    * @return a DataFrame ready for scoring
    */
   def organiseDF(model: GenModel,
                  inputDF : DataFrame,
-                 colsToKeep : Array[String]): DataFrame = {
+                 colsToKeep : Array[String],
+                 sqlContext : SQLContext): DataFrame = {
 
     inputDF.registerTempTable("inputDF")
     val missingCols = model.getNames.toList.diff(inputDF.columns.toList)
@@ -107,9 +108,10 @@ object ScoreDataFrame {
    * @return an sql dataframe with model scores and colsToKeep
    */
   def organiseScoreOutput(model: GenModel,
-                       df: DataFrame,
-                       colsToKeep: Array[String]): DataFrame = {
-    val orgDF = organiseDF(model,df,colsToKeep)
+                          df: DataFrame,
+                          colsToKeep: Array[String],
+                          sqlConext : SQLContext): DataFrame = {
+    val orgDF = organiseDF(model,df,colsToKeep,sqlConext)
     val output0 = scoreDFWithPojo(model,orgDF,colsToKeep)
     scoredToDataframe(model,orgDF,output0,colsToKeep)
   }
