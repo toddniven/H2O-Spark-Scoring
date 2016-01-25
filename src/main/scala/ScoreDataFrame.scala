@@ -10,6 +10,7 @@ import scala.collection.immutable.IndexedSeq
 import org.apache.spark.sql.types._
 
 object ScoreDataFrame {
+  @transient  var sqlContext: SQLContext = _
   /**
    * Function to arrange dataframe columns in the order that the POJO model expects.
    * Also, add and fills any missing columns with NULLs (currently uses sql).
@@ -22,7 +23,7 @@ object ScoreDataFrame {
   def organiseDF(model: GenModel,
                  inputDF : DataFrame,
                  colsToKeep : Array[String]): DataFrame = {
-    val sqlContext : SQLContext
+
     inputDF.registerTempTable("inputDF")
     val missingCols = model.getNames.toList.diff(inputDF.columns.toList)
     val appendCols = if (colsToKeep.length < 1) "" else {
