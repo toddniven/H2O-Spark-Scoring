@@ -22,7 +22,7 @@ object ScoreDataFrame {
   def organiseDF(model: GenModel,
                  inputDF : DataFrame,
                  colsToKeep : Array[String]): DataFrame = {
-    val sqlContext = SQLContext.getOrCreate(SparkContext.getOrCreate())
+    val sqlContext : SQLContext
     inputDF.registerTempTable("inputDF")
     val missingCols = model.getNames.toList.diff(inputDF.columns.toList)
     val appendCols = if (colsToKeep.length < 1) "" else {
@@ -31,13 +31,14 @@ object ScoreDataFrame {
     val inputDF0 = if (missingCols == List()) inputDF else {
       println("Warning: Missing features from dataset. Replacing with Nulls.")
       val missingColsQuery0 = for(i <- missingCols.indices) yield {
-        "NULL as "+missingCols(i)
+        "NULL as "+"`"+missingCols(i)+"`"
       }
       val missingColsQuery = "select *, "+missingColsQuery0.toString.substring(7,missingColsQuery0.toString.length-1)+" from inputDF"
       sqlContext.sql(missingColsQuery)
     }
     inputDF0.registerTempTable("inputDF0")
-    val modelColsString = model.getNames.toList.toString.substring(5,model.getNames.toList.toString.length-1)
+    val modelNames = for (c <- model.getNames) yield "`"+c+"`"
+    val modelColsString = modelNames.toList.toString.substring(5,modelNames.toList.toString.length-1)
     sqlContext.sql("select "+modelColsString+appendCols+" from inputDF0")
   }
 
