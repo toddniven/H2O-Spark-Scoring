@@ -57,21 +57,22 @@ object ScoreDataFrame {
     val domainValues = model.getDomainValues
     /* Convert each feature of each row into a doubles */
     val output = df.map(r => {
-      val rRecoded: IndexedSeq[Double] = for (i <- 0 to domainValues.length - 2) yield
-      if (model.getDomainValues(i) != null && r(i) != null) {
+      val rRecoded: IndexedSeq[Double] = for (i <- 0 to model.getNumCols - 1) yield
+      if (model.getDomainValues.apply(i) != null && r(i) != null) {
         model.mapEnum(model.getColIdx(model.getNames.apply(i)), r(i).toString).toDouble
       }
-      else
-      if (model.getDomainValues(i) != null && r(i) == null) -1.0
-      else
-        r(i) match {
+      else if (model.getDomainValues.apply(i) != null && r(i) == null) -1.0
+      else r(i) match {
           case i1: Int => i1.toDouble
+          case b: Byte => b.toDouble
+          case l: Long => l.toDouble
+          case f: Float => f.toDouble
           case d: Double => d
           case _ => Double.NaN
         }
       /* Columns to keep to be appended */
       val appendSeq = if (colsToKeep.length < 1) Seq() else {
-          for (i <- colsToKeep.indices) yield r(domainValues.length - 1 + i)
+          for (i <- colsToKeep.indices) yield r(model.getNumCols + i)
         }
       Row.fromSeq(appendSeq ++
         model.score0(rRecoded.toArray, new Array[Double](model.getNumResponseClasses + 1)).toSeq
