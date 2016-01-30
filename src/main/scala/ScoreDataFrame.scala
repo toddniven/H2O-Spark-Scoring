@@ -32,6 +32,7 @@ object ScoreDataFrame {
     }
     val inputDF0 = if (missingCols == List()) inputDF else {
       println("Warning: Missing features from dataset. Replacing with Nulls.")
+      println(missingCols)
       val missingColsQuery0 = for(i <- missingCols.indices) yield {
         "NULL as "+"`"+missingCols(i)+"`"
       }
